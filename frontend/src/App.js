@@ -1,6 +1,6 @@
+import React, { useEffect, useState } from "react";
 import './styles/App.css';
 import twitterLogo from './assets/twitter-logo.svg';
-import React from "react";
 
 // Constants
 const TWITTER_HANDLE = '_buildspace';
@@ -9,12 +9,68 @@ const OPENSEA_LINK = '';
 const TOTAL_MINT_COUNT = 50;
 
 const App = () => {
+  // state variable for users wallet
+  const [currentAccount, setCurrentAccount] = useState("");
+
+  
+  const checkIfWalletIsConnected = async () => {
+    // check for window.ethereum
+    const { ethereum } = window;
+
+    if (!ethereum) {
+      console.log("Make sure you have metamask!");
+      return;
+    } else {
+      console.log("We have the ethereum object", ethereum);
+    }
+
+    //check if authorized to access user's wallet
+    const accounts = await ethereum.request({ method: 'eth_accounts' });
+
+    // get the first authorized account
+    if (accounts.length !== 0) {
+      const account = accounts[0];
+      console.log("Found an authorized account:", account);
+      setCurrentAccount(account);
+    } else {
+      console.log("No authorized account found");
+    }
+  }
+
+  const connectWallet = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (!ethereum) {
+        alert("Get MetaMask!");
+        return;
+      }
+
+      // request access to account.
+      const accounts = await ethereum.request({ method: "eth_requestAccounts" });
+
+      // print out public address once we authorize Metamask
+      console.log("Connected", accounts[0]);
+      setCurrentAccount(accounts[0]); 
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   // Render Methods
   const renderNotConnectedContainer = () => (
-    <button className="cta-button connect-wallet-button">
+    <button onClick={connectWallet} className="cta-button connect-wallet-button">
       Connect to Wallet
     </button>
   );
+
+  /*
+  * check if wallet connected when the page loads.
+  */
+  useEffect(() => {
+    checkIfWalletIsConnected();
+  }, [])
+
 
   return (
     <div className="App">
@@ -24,7 +80,13 @@ const App = () => {
           <p className="sub-text">
             Each unique. Each beautiful. Discover your NFT today.
           </p>
-          {renderNotConnectedContainer()}
+          {currentAccount === "" ? (
+            renderNotConnectedContainer()
+          ) : (
+            <button onClick={null} className="cta-button connect-wallet-button">
+              Mint NFT
+            </button>
+          )}
         </div>
         <div className="footer-container">
           <img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />

@@ -7,13 +7,15 @@ import myEpicNft from './utils/MyEpicNFT.json';
 // Constants
 const TWITTER_HANDLE = 'gte539z';
 const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
-const OPENSEA_LINK = '';
-const TOTAL_MINT_COUNT = 50;
-const CONTRACT_ADDRESS = "0x9A517Fd7F4aC84aCa58532d01604Df238312322f";
+const CONTRACT_ADDRESS = '0xed45d6688603F6E68e9891D967b5c29BF07A04B8';
+const OPENSEA_LINK = `https://testnets.opensea.io/assets/goerli/${CONTRACT_ADDRESS}`;
+
 
 const App = () => {
-  // state variable for users wallet
   const [currentAccount, setCurrentAccount] = useState("");
+  const [mintedNFTs, setMintedNFTs]= useState();
+  const [maxNFTs, setMaxNFTs] = useState();
+
 
   
   const checkIfWalletIsConnected = async () => {
@@ -108,7 +110,39 @@ const App = () => {
         await nftTxn.wait();
         
         console.log(`Mined, see transaction: https://goerli.etherscan.io/tx/${nftTxn.hash}`);
+        
+        updateNFTCounts();
+
+      } else {
+        console.log("Ethereum object doesn't exist!");
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const updateNFTCounts = async () => {
   
+    try {
+      const { ethereum } = window;
+  
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const connectedContract = new ethers.Contract(CONTRACT_ADDRESS, myEpicNft.abi, signer);
+        
+        
+        let contractMintedNFTs = await connectedContract.getMintedNFTs();
+        console.log("Fetched quantity of minted NFTs:", contractMintedNFTs.toNumber());
+
+        let contractMaxNFTs = await connectedContract.getMaxNFTs();
+        console.log("Fetched quantity of allowed NFTs:", contractMaxNFTs.toNumber());
+        
+        if (contractMaxNFTs.toNumber() !==  mintedNFTs){
+          setMintedNFTs( contractMintedNFTs.toNumber() );
+          setMaxNFTs( contractMaxNFTs.toNumber() );
+          console.log("Updated minted and max NFTs");
+        }
       } else {
         console.log("Ethereum object doesn't exist!");
       }
@@ -129,8 +163,8 @@ const App = () => {
   */
   useEffect(() => {
     checkIfWalletIsConnected();
+    updateNFTCounts();
   })
-
 
   return (
     <div className="App">
@@ -138,14 +172,22 @@ const App = () => {
         <div className="header-container">
           <p className="header gradient-text">My NFT Collection</p>
           <p className="sub-text">
+            <a href={OPENSEA_LINK}>🌊 View Collection on OpenSea!</a>
+          </p>
+          <p className="sub-text">
             Each unique. Each beautiful. Discover your NFT today.
           </p>
           {currentAccount === "" ? (
             renderNotConnectedContainer()
           ) : (
-            <button onClick={askContractToMintNft} className="cta-button connect-wallet-button">
-              Mint NFT
-            </button>
+            <div>
+              <p className="sub-text">
+                NFTs minted: {mintedNFTs}/{maxNFTs}
+              </p>
+              <button onClick={askContractToMintNft} className="cta-button connect-wallet-button">
+                Mint NFT
+              </button>
+            </div>
           )}
         </div>
         <div className="footer-container">

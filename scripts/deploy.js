@@ -1,10 +1,12 @@
 const { ethers } = require("hardhat");
 
 const main = async () => {
-    const nftContract = await ethers.deployContract('MyEpicNFT');
+    const nftContractFactory = await ethers.getContractFactory('MyEpicNFT');
+    const nftContract = await nftContractFactory.deploy(50);
     await nftContract.waitForDeployment();
     console.log("Contract deployed to:", await nftContract.getAddress());
 
+    /*
     // mint an NFT
     let txn = await nftContract.makeAnEpicNFT()
     // wait for mint
@@ -16,6 +18,7 @@ const main = async () => {
     // wait for mint
     await txn.wait()
     console.log("Minted NFT #2")
+    */
   };
 
   const runMain = async () => {

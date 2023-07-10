@@ -12,6 +12,7 @@ import { Base64 } from "./libraries/Base64.sol";
 contract MyEpicNFT is ERC721URIStorage {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
+    uint256 private maxNFTs;
 
     // base svg template without words
     string baseSvg = "<svg xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='xMinYMin meet' viewBox='0 0 350 350'><style>.base { fill: white; font-family: serif; font-size: 24px; }</style><rect width='100%' height='100%' fill='black' /><text x='50%' y='50%' class='base' dominant-baseline='middle' text-anchor='middle'>";
@@ -24,8 +25,18 @@ contract MyEpicNFT is ERC721URIStorage {
     // create event
     event NewEpicNFTMinted(address sender, uint256 tokenId);
 
-    constructor() ERC721 ("SquareNFT", "SQUARE") {
+    constructor(uint256 _maxNFTs) ERC721 ("SquareNFT", "SQUARE") {
         console.log("This is my NFT contract. Finally back to building!");
+        maxNFTs = _maxNFTs;
+        console.log("Set maxNFTs to %s", maxNFTs);
+    }
+
+    function getMaxNFTs() public view returns (uint256) {
+        return maxNFTs;
+    }
+
+    function getMintedNFTs() public view returns (uint256) {
+        return _tokenIds.current();        
     }
 
     function pickRandomFirstWord(uint256 tokenId) public view returns (string memory) {
@@ -52,8 +63,10 @@ contract MyEpicNFT is ERC721URIStorage {
 
     // function to generate NFT
     function makeAnEpicNFT() public {
+        require(_tokenIds.current() < maxNFTs, "maximum number of NFTs reached");
         // get current tokenId (starts at 0)
         uint256 newItemId = _tokenIds.current();
+
 
         // randomly get a word from each of array
         string memory first = pickRandomFirstWord(newItemId);
